@@ -1,0 +1,6 @@
+pillow
+numpy
+moviepy
+colorama
+art
+tk
