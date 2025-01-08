@@ -3,8 +3,11 @@ Steganography Detection Framework Used For Analyzing Files i.e PDFs, Images, Vid
 
 # Install Requirements
 pip install -r requirements.txt
-sudo apt-get install tesseract-ocr
+
+sudo apt-get install tesseract-ocr -y
+
 sudo apt-get install exiftool -y
+
 sudo apt-get install pdfinfo -y
 
 # Export PATH
