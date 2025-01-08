@@ -1,11 +1,14 @@
 # stegsleuth - a steganography detection framework 
 # author - @cyb3rf034r3ss
 import os
+import readline
 import sys
 import shutil
 from PIL import Image
+import pytesseract
 import numpy as np
 import wave
+import subprocess
 from moviepy import VideoFileClip
 from colorama import init, Fore, Back, Style
 import art
@@ -132,6 +135,8 @@ class SteganographyConsole:
             return 'audio'
         elif asset.lower().endswith(('.mp4', '.avi')):
             return 'video'
+        elif asset.lower().endswith('.pdf'):
+            return 'pdf'
         else:
             return 'unknown'
 
@@ -148,6 +153,8 @@ class SteganographyConsole:
             self.analyze_audio(asset_path)
         elif self.selected_asset_type == 'video':
             self.analyze_video(asset_path)
+        elif self.selected_asset_type == 'pdf':
+            self.analyze_pdf(asset_path)
         else:
             print(Fore.RED + "\nUnsupported file type.\n")
 
@@ -158,12 +165,21 @@ class SteganographyConsole:
             print(Fore.YELLOW + f"Hidden data detected in image: {hidden_message[:100]}...\n")
         else:
             print(Fore.RED + "\nNo hidden data detected in the image.\n")
+        print(Fore.GREEN + f"[*] Exif Data\n")
+        exif_data = subprocess.check_output(f'exiftool {image_file}', shell=True)
+        print(exif_data.decode())
+        image = Image.open(image_file)
+
+        text = pytesseract.image_to_string(image)
+
+        print(Fore.GREEN + f"[*] Extracted Text From Image\n")
+        print(text)
 
     def analyze_audio(self, audio_file):
         print(Fore.GREEN + f"[*] Running audio analysis on {audio_file}...")
         anomalies = detect_audio_steganography(audio_file)
         if anomalies.size > 0:
-            print(Fore.YELLOW + f"Frequency anomalies detected in audio: {anomalies[:10]}...")  # Print first 10 anomalies
+            print(Fore.YELLOW + f"Frequency anomalies detected in audio: {anomalies[:10]}...") 
         else:
             print(Fore.RED + "No hidden data detected in the audio.")
 
@@ -171,9 +187,18 @@ class SteganographyConsole:
         print(Fore.GREEN + f"[*] Running video analysis on {video_file}...")
         frame_data = detect_video_steganography(video_file)
         if frame_data:
-            print(Fore.YELLOW + f"Possible hidden data detected in video frames: {frame_data[:10]}...")  # Print first 10 data points
+            print(Fore.YELLOW + f"Possible hidden data detected in video frames: {frame_data[:10]}...") 
         else:
             print(Fore.RED + "No hidden data detected in the video.")
+
+    def analyze_pdf(self, pdf_file):
+        print(Fore.GREEN + f"\n[*] Running PDF analysis on {pdf_file}...\n")
+        try:
+            
+            pdf_info = subprocess.check_output(f'pdfinfo {pdf_file}', shell=True)
+            print(Fore.YELLOW + f"PDF Metadata:\n{pdf_info.decode()}")
+        except subprocess.CalledProcessError as e:
+            print(Fore.RED + f"Error extracting PDF metadata: {e}\n")
 
     def display_help(self):
         print(Fore.CYAN + "\nHelp Menu:")
@@ -184,6 +209,7 @@ class SteganographyConsole:
         print(Fore.GREEN + "upload <path>   - Uploads a file to the 'assets' folder")
         print(Fore.GREEN + "exit            - Exits the framework")
         print()
+    
     def upload_asset(self, command):
         try:
             file_path = command.split()[1]
