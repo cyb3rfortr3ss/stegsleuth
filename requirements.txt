@@ -4,3 +4,4 @@ moviepy
 colorama
 art
 tk
+pytesseract
